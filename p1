@@ -1,0 +1,145 @@
+// Importing required modules
+const express = require('express');
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const dotenv = require('dotenv');
+
+// Load environment variables from .env file
+dotenv.config();
+
+// Initialize Express app
+const app = express();
+
+// Middleware setup
+app.use(cors());
+app.use(bodyParser.json());
+
+// MongoDB connection setup
+mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log('MongoDB connected'))
+    .catch(err => console.error('MongoDB connection error:', err));
+
+// User Schema for MongoDB
+const userSchema = new mongoose.Schema({
+    username: { type: String, required: true, unique: true },
+    password: { type: String, required: true }
+});
+
+// User Model
+const User = mongoose.model('User', userSchema);
+
+/**
+ * Middleware to authenticate users.
+ * This function checks if the user is authenticated before allowing access to protected routes.
+ */
+const authenticate = (req, res, next) => {
+    // Placeholder for authentication logic
+    // In a real application, you would verify the user's credentials here
+    next();
+};
+
+/**
+ * Route to register a new user.
+ * @route POST /register
+ * @param {Object} req - The request object containing user data.
+ * @param {Object} res - The response object to send back the result.
+ */
+app.post('/register', async (req, res) => {
+    const { username, password } = req.body;
+    const newUser = new User({ username, password });
+    try {
+        await newUser.save();
+        res.status(201).send('User registered successfully');
+    } catch (error) {
+        res.status(400).send('Error registering user: ' + error.message);
+    }
+});
+
+/**
+ * Route to log in a user.
+ * @route POST /login
+ * @param {Object} req - The request object containing login credentials.
+ * @param {Object} res - The response object to send back the result.
+ */
+app.post('/login', async (req, res) => {
+    const { username, password } = req.body;
+    // Placeholder for login logic
+    // In a real application, you would verify the user's credentials here
+    res.send('User logged in successfully');
+});
+
+/**
+ * Route to get user data.
+ * @route GET /user
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object to send back user data.
+ */
+app.get('/user', authenticate, (req, res) => {
+    // Placeholder for fetching user data
+    res.send('User data');
+});
+
+// Start the server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
+
+// Frontend React Application (Basic Structure)
+/**
+ * This is a basic structure for a React application that interacts with the above Express server.
+ * Create a new React app using create-react-app and replace the contents of App.js with the following code.
+ */
+
+import React, { useState } from 'react';
+import './App.css';
+
+function App() {
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+
+    const handleRegister = async () => {
+        const response = await fetch('http://localhost:5000/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password }),
+        });
+        const data = await response.text();
+        alert(data);
+    };
+
+    const handleLogin = async () => {
+        const response = await fetch('http://localhost:5000/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password }),
+        });
+        const data = await response.text();
+        alert(data);
+    };
+
+    return (
+        <div className="App">
+            <h1>User Authentication</h1>
+            <input
+                type="text"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+            />
+            <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+            />
+            <button onClick={handleRegister}>Register</button>
+            <button onClick={handleLogin}>Login</button>
+        </div>
+    );
+}
+
+export default App;
+
+// Note: Ensure to create a .env file with your MongoDB URI and any other necessary environment variables.
